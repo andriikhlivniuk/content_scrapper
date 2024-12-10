@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 
 def save_login_form():
@@ -13,7 +14,6 @@ def save_login_form():
 
     response = requests.get(url, headers=headers)
 
-    # Check if the request was successful
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
         login_form = soup.find('form')
@@ -24,8 +24,8 @@ def save_login_form():
         print(f"Failed to retrieve page. Status code: {response.status_code}")
 
 
-def get_promotions():
-    proxy = "http://173.249.39.200:3128"
+def get_promotions(proxy={}):
+    
 
     url = "https://www.woocasino.com/promotions"
 
@@ -49,11 +49,32 @@ def get_promotions():
         print(f"Failed to request. Status code: {response.status_code}")
 
 
+def get_bonuses():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page()
+
+        url = 'https://betandyou-227625.top/pl/bonus/rules'
+        page.goto(url)
+
+        page.wait_for_selector('.bonuses-bonus-tile__content')
+
+        html_content = page.content()
+
+    soup = BeautifulSoup(html_content, 'html.parser')
+    titles = soup.find_all('div', class_='template-compiler bonuses-bonus-tile-name__compile')
+
+    with open('bonuses.txt', 'w', encoding='utf-8') as file:
+        for title in titles:
+            file.write(title.get_text(strip=True)+"\n")
+
 
 def main():
      
-    # save_login_form(url)
-    get_promotions()
+    save_login_form()
+    proxy = "http://173.249.39.200:3128" # Change to your working DE proxy to test
+    get_promotions(proxy)
+    get_bonuses()
 
 
 
